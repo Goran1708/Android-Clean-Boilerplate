@@ -1,12 +1,15 @@
 package com.kodelabs.boilerplate.domain.interactors.impl;
 
-import com.kodelabs.boilerplate.domain.executor.Executor;
+import com.kodelabs.boilerplate.domain.executor.ThreadExecutor;
 import com.kodelabs.boilerplate.domain.executor.MainThread;
+import com.kodelabs.boilerplate.domain.interactors.DefaultSubscriber;
 import com.kodelabs.boilerplate.domain.interactors.WelcomingInteractor;
 import com.kodelabs.boilerplate.domain.interactors.base.AbstractInteractor;
 import com.kodelabs.boilerplate.domain.repository.MessageRepository;
 
 import javax.inject.Inject;
+
+import rx.Observable;
 
 /**
  * This is an interactor boilerplate with a reference to a model repository.
@@ -18,10 +21,10 @@ public class WelcomingInteractorImpl extends AbstractInteractor implements Welco
     private MessageRepository            mMessageRepository;
 
     @Inject
-    public WelcomingInteractorImpl(Executor threadExecutor,
+    public WelcomingInteractorImpl(ThreadExecutor threadThreadExecutor,
                                    MainThread mainThread,
                                     MessageRepository messageRepository) {
-        super(threadExecutor, mainThread);
+        super(threadThreadExecutor, mainThread);
         mMessageRepository = messageRepository;
     }
 
@@ -30,43 +33,37 @@ public class WelcomingInteractorImpl extends AbstractInteractor implements Welco
         mCallback = callback;
 
         //execute from base
-        execute();
-    }
-
-    private void notifyError() {
-        mMainThread.post(new Runnable() {
-            @Override
-            public void run() {
-                mCallback.onRetrievalFailed("Nothing to welcome you with :(");
-            }
-        });
-    }
-
-    private void postMessage(final String msg) {
-        mMainThread.post(new Runnable() {
-            @Override
-            public void run() {
-                mCallback.onMessageRetrieved(msg);
-            }
-        });
+        execute(new StringSubscriber());
     }
 
     @Override
-    public void run() {
+    public void unsubscribeObservable() {
+        unsubscribe();
+    }
 
-        // retrieve the message
-        final String message = mMessageRepository.getWelcomeMessage();
+    @Override public Observable buildUseCaseObservable() {
+        return this.mMessageRepository.getWelcomeMessage();
+    }
 
-        // check if we have failed to retrieve our message
-        if (message == null || message.length() == 0) {
+    private void notifyError() {
+        mCallback.onRetrievalFailed("Nothing to welcome you with :(");
+    }
 
-            // notify the failure on the main thread
-            notifyError();
+    private void postMessage(final String msg) {
+        mCallback.onMessageRetrieved(msg);
+    }
 
-            return;
+    private final class StringSubscriber extends DefaultSubscriber<String> {
+
+        @Override public void onCompleted() {
         }
 
-        // we have retrieved our message, notify the UI on the main thread
-        postMessage(message);
+        @Override public void onError(Throwable e) {
+            WelcomingInteractorImpl.this.notifyError();
+        }
+
+        @Override public void onNext(String message) {
+            WelcomingInteractorImpl.this.postMessage(message);
+        }
     }
 }

@@ -1,10 +1,13 @@
 package com.kodelabs.boilerplate.domain.interactors.base;
 
-import com.kodelabs.boilerplate.domain.executor.Executor;
+import com.kodelabs.boilerplate.domain.executor.ThreadExecutor;
 import com.kodelabs.boilerplate.domain.executor.MainThread;
-import com.kodelabs.boilerplate.domain.interactors.WelcomingInteractor;
 
-import javax.inject.Inject;
+import rx.Observable;
+import rx.Subscriber;
+import rx.Subscription;
+import rx.schedulers.Schedulers;
+import rx.subscriptions.Subscriptions;
 
 /**
  * Created by dmilicic on 8/4/15.
@@ -18,25 +21,18 @@ import javax.inject.Inject;
  */
 public abstract class AbstractInteractor implements Interactor {
 
-    protected Executor   mThreadExecutor;
+    protected ThreadExecutor mThreadThreadExecutor;
     protected MainThread mMainThread;
+
+    private Subscription subscription = Subscriptions.empty();
 
     protected volatile boolean mIsCanceled;
     protected volatile boolean mIsRunning;
 
-    public AbstractInteractor(Executor threadExecutor, MainThread mainThread) {
-        mThreadExecutor = threadExecutor;
+    public AbstractInteractor(ThreadExecutor threadThreadExecutor, MainThread mainThread) {
+        mThreadThreadExecutor = threadThreadExecutor;
         mMainThread = mainThread;
     }
-
-    /**
-     * This method contains the actual business logic of the interactor. It SHOULD NOT BE USED DIRECTLY but, instead, a
-     * developer should call the execute() method of an interactor to make sure the operation is done on a background thread.
-     * <p/>
-     * This method should only be called directly while doing unit/integration tests. That is the only reason it is declared
-     * public as to help with easier testing.
-     */
-    public abstract void run();
 
     public void cancel() {
         mIsCanceled = true;
@@ -52,12 +48,33 @@ public abstract class AbstractInteractor implements Interactor {
         mIsCanceled = false;
     }
 
-    public void execute() {
+    /**
+     * Builds an {@link rx.Observable} which will be used when executing the current.
+     */
+    protected abstract Observable buildUseCaseObservable();
 
-        // mark this interactor as running
+    /**
+     * Executes the current use case.
+     *
+     * @param UseCaseSubscriber The guy who will be listen to the observable build with {@link #buildUseCaseObservable()}.
+     */
+    @SuppressWarnings("unchecked")
+    public void execute(Subscriber UseCaseSubscriber) {
+
         this.mIsRunning = true;
 
-        // start running this interactor in a background thread
-        mThreadExecutor.execute(this);
+        this.subscription = this.buildUseCaseObservable()
+                .subscribeOn(Schedulers.from(mThreadThreadExecutor))
+                .observeOn(mMainThread.getScheduler())
+                .subscribe(UseCaseSubscriber);
+    }
+
+    /**
+     * Unsubscribes from current {@link rx.Subscription}.
+     */
+    public void unsubscribe() {
+        if (!subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+        }
     }
 }

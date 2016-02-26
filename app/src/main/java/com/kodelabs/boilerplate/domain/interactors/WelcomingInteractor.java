@@ -17,4 +17,6 @@ public interface WelcomingInteractor extends Interactor {
      * background thread.
      */
     void execute(final Callback callback);
+
+    void unsubscribeObservable();
 }

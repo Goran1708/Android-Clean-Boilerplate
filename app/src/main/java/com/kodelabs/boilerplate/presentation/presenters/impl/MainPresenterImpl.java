@@ -1,7 +1,6 @@
 package com.kodelabs.boilerplate.presentation.presenters.impl;
 
 import com.kodelabs.boilerplate.domain.interactors.WelcomingInteractor;
-import com.kodelabs.boilerplate.domain.repository.MessageRepository;
 import com.kodelabs.boilerplate.presentation.presenters.MainPresenter;
 
 import javax.inject.Inject;
@@ -42,7 +41,7 @@ public class MainPresenterImpl implements MainPresenter,
 
     @Override
     public void destroy() {
-
+        welcomingInteractor.unsubscribeObservable();
     }
 
     @Override

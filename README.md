@@ -114,8 +114,8 @@ This just attempts to retrieve the message and sends the message or the error to
 Let's take a look which dependencies does this Interactor have:
 
 ```
-import com.kodelabs.boilerplate.domain.executor.Executor;
-import com.kodelabs.boilerplate.domain.executor.MainThread;
+import com.kodelabs.boilerplate.domain.executor.ThreadExecutorecutor;
+import com.kodelabs.boilerplate.domain.threadExecutor.MainThread;
 import com.kodelabs.boilerplate.domain.interactors.WelcomingInteractor;
 import com.kodelabs.boilerplate.domain.interactors.base.AbstractInteractor;
 import com.kodelabs.boilerplate.domain.repository.MessageRepository;

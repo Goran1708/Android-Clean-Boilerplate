@@ -1,7 +1,7 @@
 package com.kodelabs.boilerplate.domain.interactors;
 
 
-import com.kodelabs.boilerplate.domain.executor.Executor;
+import com.kodelabs.boilerplate.domain.executor.ThreadExecutor;
 import com.kodelabs.boilerplate.domain.executor.MainThread;
 import com.kodelabs.boilerplate.domain.interactors.impl.WelcomingInteractorImpl;
 import com.kodelabs.boilerplate.domain.repository.MessageRepository;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 public class GetWelcomeMessageTest {
 
     private       MainThread                   mMainThread;
-    @Mock private Executor                     mExecutor;
+    @Mock private ThreadExecutor mThreadExecutor;
     @Mock private MessageRepository            mMessageRepository;
     @Mock private WelcomingInteractor.Callback mMockedCallback;
 
@@ -36,7 +36,7 @@ public class GetWelcomeMessageTest {
 
     @Test
     public void testWelcomeMessageNotFound() throws Exception {
-        WelcomingInteractorImpl interactor = new WelcomingInteractorImpl(mExecutor, mMainThread, mMockedCallback, mMessageRepository);
+        WelcomingInteractorImpl interactor = new WelcomingInteractorImpl(mThreadExecutor, mMainThread, mMockedCallback, mMessageRepository);
         interactor.run();
 
         Mockito.when(mMessageRepository.getWelcomeMessage())
@@ -55,7 +55,7 @@ public class GetWelcomeMessageTest {
         when(mMessageRepository.getWelcomeMessage())
                 .thenReturn(msg);
 
-        WelcomingInteractorImpl interactor = new WelcomingInteractorImpl(mExecutor, mMainThread, mMockedCallback, mMessageRepository);
+        WelcomingInteractorImpl interactor = new WelcomingInteractorImpl(mThreadExecutor, mMainThread, mMockedCallback, mMessageRepository);
         interactor.run();
 
         Mockito.verify(mMessageRepository).getWelcomeMessage();

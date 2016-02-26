@@ -1,10 +1,8 @@
 package com.kodelabs.boilerplate.dagger_di.modules;
 
-import com.kodelabs.boilerplate.domain.executor.Executor;
+import com.kodelabs.boilerplate.domain.executor.ThreadExecutor;
 import com.kodelabs.boilerplate.domain.executor.MainThread;
-import com.kodelabs.boilerplate.domain.executor.impl.ThreadExecutor;
-import com.kodelabs.boilerplate.domain.repository.MessageRepository;
-import com.kodelabs.boilerplate.storage.WelcomeMessageRepository;
+import com.kodelabs.boilerplate.domain.executor.impl.JobThreadExecutor;
 import com.kodelabs.boilerplate.threading.MainThreadImpl;
 
 import javax.inject.Singleton;
@@ -19,13 +17,15 @@ import dagger.Provides;
 public class ExecutorModule {
 
     @Provides
-    public Executor provideExecutor() {
-        return ThreadExecutor.getInstance();
+    @Singleton
+    public ThreadExecutor provideExecutor(JobThreadExecutor threadExecutor) {
+        return threadExecutor;
     }
 
     @Provides
-    public MainThread provideMainThread() {
-        return MainThreadImpl.getInstance();
+    @Singleton
+    public MainThread provideMainThread(MainThreadImpl mainThread) {
+        return mainThread;
     }
 
 }
